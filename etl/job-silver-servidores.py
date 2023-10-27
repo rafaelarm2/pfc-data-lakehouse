@@ -7,22 +7,34 @@ import pandas as pd
 from utils.utils import apply_schema
 from utils.schemas.sevidor import ServidorSchema
 from pyspark.context import SparkContext as sc
+from utils.config import architecture_config, data_date_range
 
 # COMMAND ----------
 
 dbutils.widgets.removeAll()
-dbutils.widgets.text("execution_month","202308","Execution month (yyyyMM)")
-dbutils.widgets.dropdown("full_load","false",["true","false"])
-execution_month = dbutils.widgets.get("execution_month")
-if execution_month < "202212" or execution_month > "202308":
-    raise Exception("Must be a date between 202212 and 202308 in the format yyyyMM")
-execution_month = execution_month[-2:] + execution_month[0:4]
+
+dbutils.widgets.dropdown("full_load", "false", ["true", "false"], "Carga total")
 full_load = False if dbutils.widgets.get("full_load") == "false" else True
+
+dbutils.widgets.text("execution_month", "202308", "Mês de execução (yyyyMM)")
+execution_month = dbutils.widgets.get("execution_month") if not full_load else None
+if execution_month:
+    if (execution_month < data_date_range["start"]or execution_month > data_date_range["end"]):
+        raise Exception("Must be a date between 202212 and 202308 in the format yyyyMM")
+elif not full_load:
+    dbutils.widgets.set("auxilio")
+    raise Exception("If full load is false, a execution month must be provided")
+
+
+dbutils.widgets.dropdown("architecture", "Data Lakehouse", list(architecture_config.keys()), "Arquitetura")
+architecture = dbutils.widgets.get("architecture")
 
 # COMMAND ----------
 
-bronze_path = "gs://bucket-pfc-data-lakehouse/bronze"
-silver_path = "gs://bucket-pfc-data-lakehouse/silver"
+bucket = architecture_config[architecture]["bucket"]
+
+bronze_path = f"gs://{bucket}/bronze"
+silver_path = f"gs://{bucket}/silver"
 
 servidores_bronze_path = f"{bronze_path}/servidores/"
 servidores_silver_path = f"{silver_path}/servidores/"
@@ -38,8 +50,8 @@ else:
 # COMMAND ----------
 
 list_servidores_bronze_data = []
-columns = ["NOME", "CPF", "CODIGO_DA_CARREIRA", "DESCRICAO_DO_CARGO_EMPREGO", "UF_DA_UPAG_DE_VINCULACAO",
-           "DENOMINACAO_DO_ORGAO_DE_ATUACAO","MES_DE_REFERENCIA", "VALOR_DA_REMUNERACAO",""]
+columns = ["NOME", "CPF", "CODIGO_DA_CARREIRA", "DESCRICAO_DO_CARGO_EMPREGO",
+           "UF_DA_UPAG_DE_VINCULACAO","DENOMINACAO_DO_ORGAO_DE_ATUACAO","MES_DE_REFERENCIA", "VALOR_DA_REMUNERACAO",""]
 number_columns = len(columns)
 
 for path in paths:
@@ -65,6 +77,10 @@ df_servidores_silver = apply_schema(df_servidores_bronze, ServidorSchema)
 
 # COMMAND ----------
 
+df_servidores_silver.display()
+
+# COMMAND ----------
+
 pattern = r".*/repositorio.dados.gov.br_segrt_CARREIRA_(\d{6})\..*"
 df_servidores_silver = df_servidores_silver.withColumn("SourceFile", F.input_file_name())
 df_servidores_silver = df_servidores_silver \
@@ -75,8 +91,21 @@ df_servidores_silver = df_servidores_silver \
 
 # COMMAND ----------
 
-df_servidores_silver.write.format("delta") \
-    .option("mergeSchema", "true") \
-    .mode("overwrite") \
-    .partitionBy(["Month"]) \
-    .save(servidores_silver_path)
+df_servidores_silver = df_servidores_silver.drop("")
+
+# COMMAND ----------
+
+spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
+
+if architecture == "Data Lakehouse": 
+    df_servidores_silver.write.format("delta") \
+        .option("mergeSchema", "true") \
+        .mode("overwrite") \
+        .partitionBy(["Month"]) \
+        .save(servidores_silver_path)
+
+if architecture == "Data Lake":
+    df_servidores_silver.write.format("parquet") \
+        .mode("overwrite") \
+        .partitionBy(["Month"]) \
+        .save(servidores_silver_path)

@@ -1,4 +1,5 @@
 # Databricks notebook source
+from delta.tables import *
 from pyspark import sql as spark_sql
 from pyspark.sql import functions as F
 
@@ -60,7 +61,8 @@ df_auxilio_bronze = (
 
 df_auxilio_silver = df_auxilio_bronze \
     .withColumnRenamed("GRUPO_CARGO", "NO_GRUPO_CARGO") \
-    .withColumnRenamed("CARGO_FUNCAO", "NO_CARGO")
+    .withColumnRenamed("CARGO_FUNCAO", "NO_CARGO") \
+    .withColumnRenamed("AUX_NATALIDADE", "VALOR_AUXILIO")
 
 df_auxilio_silver = apply_schema(df_auxilio_silver, AuxilioSchema)
 
@@ -75,7 +77,9 @@ df_auxilio_silver = df_auxilio_silver \
 
 # COMMAND ----------
 
-if architecture == "Data Lakehouse":
+spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
+
+if architecture == "Data Lakehouse": 
     df_auxilio_silver.write.format("delta") \
         .option("mergeSchema", "true") \
         .mode("overwrite") \
@@ -84,7 +88,7 @@ if architecture == "Data Lakehouse":
 
 if architecture == "Data Lake":
     df_auxilio_silver.write.format("parquet") \
-        .option("mergeSchema", "true") \
+        .option("overwriteSchema", "true") \
         .mode("overwrite") \
         .partitionBy(["Date"]) \
         .save(auxilio_silver_path)

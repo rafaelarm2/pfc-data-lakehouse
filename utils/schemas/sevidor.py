@@ -24,4 +24,4 @@ class ServidorSchema(enum.Enum):
     UF_DA_UPAG_DE_VINCULACAO = (ServidorDataModel.UF_UPAG_VINCULACAO, "string")
     DENOMINACAO_DO_ORGAO_DE_ATUACAO = (ServidorDataModel.ORGAO_ATUACAO, "string")
     MES_DE_REFERENCIA = (ServidorDataModel.MES_REFERENCIA, "string")
-    VALOR_DA_REMUNERACAO = (ServidorDataModel.SALARIO, "string")
+    VALOR_DA_REMUNERACAO = (ServidorDataModel.SALARIO, "float")
