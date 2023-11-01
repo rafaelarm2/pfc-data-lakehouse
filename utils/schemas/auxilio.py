@@ -1,6 +1,7 @@
 import enum
 
 class AuxilioDataModel():
+    ID = 'Id'
     ID_ORGAO = 'IdOrgao'
     ORGAO = 'Orgao'
     UNIDADE_ORGANIZACIONAL = 'UnidadeOrganizacional'
@@ -27,6 +28,7 @@ class AuxilioSchema(enum.Enum):
         obj._value_ = name
         obj.type = type
         return obj
+    ID = (AuxilioDataModel.ID, "long")
     CO_ORGAO = (AuxilioDataModel.ID_ORGAO, "string")
     NO_ORGAO = (AuxilioDataModel.ORGAO, "string")
     NO_UORG = (AuxilioDataModel.UNIDADE_ORGANIZACIONAL, "string")

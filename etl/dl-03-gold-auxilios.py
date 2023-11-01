@@ -41,6 +41,10 @@ auxilios_gold_path = f"{gold_path}/auxilios/"
 
 # COMMAND ----------
 
+auxilio_paths
+
+# COMMAND ----------
+
 partition_condition = f"Date='{execution_month}'"
 
 list_df_auxilios = []
@@ -48,9 +52,9 @@ for key, value in auxilio_paths.items():
     path = f"{value}/"
     if architecture == "Data Lakehouse":
         if full_load:
-            df_auxilio = spark.read.format("delta").load(path)
+            df_auxilio = spark.read.table(f"main.default.silver_{key}")
         else: 
-            df_auxilio = spark.read.format("delta").load(path).where(partition_condition)
+            df_auxilio = spark.read.table(f"main.default.silver_{key}").where(partition_condition)
     if architecture == "Data Lake":
         if full_load:
             df_auxilio = spark.read.format("parquet").option("basePath", path).load(f"{path}*")
@@ -63,16 +67,6 @@ for key, value in auxilio_paths.items():
 df_all_auxilios = union_all(list_df_auxilios)
 
 df_all_auxilios = df_all_auxilios.withColumnRenamed("Date","Month")
-
-# COMMAND ----------
-
-# last_servidores_date = spark.sql(f"SHOW Partitions delta.`{servidores_path}` ") \
-#     .select(F.max("Month").alias("Month")).collect()[0].asDict()['Month']
-# partition_condition = f"Month='{last_servidores_date}'"
-# if architecture == "Data Lakehouse":
-#     df_servidores = spark.read.format("delta").load(servidores_path).where(partition_condition)
-# if architecture == "Data Lake":
-#     df_servidores = spark.read.format("parquet").option("basePath", path).load(f"{servidores_path}{partition_condition}")
 
 # COMMAND ----------
 
@@ -98,10 +92,10 @@ spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
 
 if architecture == "Data Lakehouse":
     df_all_auxilios.write.format("delta") \
-        .option("overwriteSchema", "true") \
         .mode("overwrite") \
-        .partitionBy(["Auxilio", "Month"]) \
-        .save(auxilios_gold_path)
+        .option("mergeSchema", "true") \
+        .partitionBy(["Month", "Auxilio"]) \
+        .saveAsTable("main.default.gold_auxilio")
 
 if architecture == "Data Lake":
     df_all_auxilios.write.format("parquet") \
