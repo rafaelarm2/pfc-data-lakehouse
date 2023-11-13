@@ -31,4 +31,8 @@ def process_user_deletion_for_each_dataset(matricula: str, auxilio: str):
 
 for auxilio in auxilios_config.keys():
     process_user_deletion_for_each_dataset(matricula, auxilio)
-    dbutils.notebook.run("etl/dl-02-silver-auxilios", 60, {"auxilio": auxilio, "full_load": "True"})
+    dbutils.notebook.run("etl/dl-02-silver-auxilios", 3600, {"auxilio": auxilio, "full_load": "True"})
+
+# COMMAND ----------
+
+dbutils.notebook.run("etl/dl-03-gold-auxilios", 3600, {"full_load": "True"})

@@ -19,3 +19,4 @@ data_lake_bucket = architecture_config["Data Lake"]["bucket"]
 for auxilio in auxilios_config.keys():
     spark.sql(f"DELETE FROM data_lakehouse.default.bronze_auxilio_{auxilio} WHERE MAT_SERV = '{matricula}';")
     spark.sql(f"DELETE FROM data_lakehouse.default.silver_auxilio_{auxilio} WHERE Matricula = '{matricula}';")
+spark.sql(f"DELETE FROM data_lakehouse.default.gold_auxilios WHERE Matricula = '{matricula}';")

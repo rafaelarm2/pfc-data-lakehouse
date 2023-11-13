@@ -9,17 +9,11 @@ from utils.config import auxilios_config, architecture_config, data_date_range
 
 dbutils.widgets.removeAll()
 
-dbutils.widgets.dropdown("full_load", "false", ["true", "false"], "Carga total")
+dbutils.widgets.dropdown("full_load", "true", ["true", "false"], "Carga total")
 full_load = False if dbutils.widgets.get("full_load") == "false" else True
 
 dbutils.widgets.text("execution_month", "202308", "Mês de execução (yyyyMM)")
 execution_month = dbutils.widgets.get("execution_month") if not full_load else None
-if execution_month:
-    if (execution_month < data_date_range["start"]or execution_month > data_date_range["end"]):
-        raise Exception("Must be a date between 202212 and 202308 in the format yyyyMM")
-elif not full_load:
-    dbutils.widgets.set("auxilio")
-    raise Exception("If full load is false, a execution month must be provided")
 
 dbutils.widgets.dropdown("auxilio","alimentacao",list(auxilios_config.keys()), "Auxílio")
 auxilio = dbutils.widgets.get("auxilio")

@@ -1,6 +1,7 @@
 import enum
 
 class ServidorDataModel():
+    ID = 'Id'
     NOME = 'Nome'
     CPF = 'Cpf'
     COD_CARREIRA = 'CodCarreira'
@@ -17,6 +18,7 @@ class ServidorSchema(enum.Enum):
         obj._value_ = name
         obj.type = type
         return obj
+    ID = (ServidorDataModel.ID, "long")
     NOME = (ServidorDataModel.NOME, "string")
     CPF = (ServidorDataModel.CPF, "string")
     CODIGO_DA_CARREIRA = (ServidorDataModel.COD_CARREIRA, "string")

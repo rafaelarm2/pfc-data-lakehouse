@@ -12,22 +12,6 @@
 # MAGIC GRANT CREATE SCHEMA, CREATE TABLE, USE CATALOG
 # MAGIC ON CATALOG data_lakehouse
 # MAGIC TO `account users`;
-# MAGIC
-# MAGIC USE CATALOG data_lake;
-# MAGIC CREATE SCHEMA IF NOT EXISTS main;
-# MAGIC USE CATALOG data_lakehouse;
-# MAGIC CREATE SCHEMA IF NOT EXISTS main;
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC drop table data_lakehouse.default.bronze_auxilio_alimentacao;
-# MAGIC drop table hive_metastore.default.bronze_auxilio_moradia;
-# MAGIC drop table hive_metastore.default.bronze_auxilio_natalidade;
-# MAGIC drop table hive_metastore.default.bronze_auxilio_pre_escolar;
-# MAGIC drop table hive_metastore.default.bronze_auxilio_reclusao;
-# MAGIC drop table hive_metastore.default.bronze_auxilio_transporte;
 
 # COMMAND ----------
 
@@ -44,12 +28,12 @@
 # MAGIC -- drop table data_lakehouse.default.silver_auxilio_reclusao;
 # MAGIC -- drop table data_lakehouse.default.silver_auxilio_transporte;
 # MAGIC -- drop table data_lakehouse.default.silver_auxilio_natalidade;
-# MAGIC drop table data_lake.default.bronze_auxilio_moradia;
+# MAGIC -- drop table data_lake.default.bronze_auxilio_moradia;
 # MAGIC -- drop table data_lake.default.bronze_auxilio_pre_escolar;
 # MAGIC -- drop table data_lake.default.bronze_auxilio_reclusao;
-# MAGIC drop table data_lake.default.bronze_auxilio_transporte;
+# MAGIC -- drop table data_lake.default.bronze_auxilio_transporte;
 # MAGIC -- drop table data_lake.default.bronze_auxilio_natalidade;
-# MAGIC drop table data_lake.default.bronze_auxilio_alimentacao;
+# MAGIC -- drop table data_lake.default.bronze_auxilio_alimentacao;
 
 # COMMAND ----------
 
@@ -60,6 +44,30 @@
 # COMMAND ----------
 
 dbutils.widgets.dropdown("bucket", "bucket-pfc-data-lakehouse", ["bucket-pfc-data-lakehouse", "bucket-pfc-data-lake"])
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC drop table data_lakehouse.default.bronze_servidores
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS data_lakehouse.default.bronze_servidores (
+# MAGIC     ID BIGINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
+# MAGIC     NOME STRING,
+# MAGIC     CPF STRING,
+# MAGIC     CODIGO_DA_CARREIRA STRING,
+# MAGIC     DESCRICAO_DO_CARGO_EMPREGO STRING,
+# MAGIC     UF_DA_UPAG_DE_VINCULACAO STRING,
+# MAGIC     DENOMINACAO_DO_ORGAO_DE_ATUACAO STRING,
+# MAGIC     MES_DE_REFERENCIA STRING,
+# MAGIC     VALOR_DA_REMUNERACAO STRING,
+# MAGIC     Month STRING
+# MAGIC )
+# MAGIC USING DELTA
+# MAGIC PARTITIONED BY (Month)
+# MAGIC LOCATION 'gs://bucket-pfc-data-lakehouse/bronze/servidores/';
 
 # COMMAND ----------
 
@@ -367,103 +375,52 @@ dbutils.widgets.dropdown("bucket", "bucket-pfc-data-lakehouse", ["bucket-pfc-dat
 
 # COMMAND ----------
 
-# %sql
-# CREATE TABLE IF NOT EXISTS gold_auxilios (
-#     IdOrgao STRING,
-#     Orgao STRING,
-#     UnidadeOrganizacional STRING,
-#     MunicipioUnidadeOrganizacional STRING,
-#     UfUnidadeOrganizacional STRING,
-#     Matricula STRING,
-#     Nome STRING,
-#     Carreira STRING,
-#     Cargo STRING,
-#     Rubrica STRING,
-#     NomeRubrica STRING,
-#     RendDesc STRING,
-#     ValorAuxilio FLOAT,
-#     GrupoCargoOrigem STRING,
-#     CargoOrigem STRING,
-#     SituacaoServidor STRING,
-#     SiglaCargo STRING,
-#     OcorrenciaIngspf STRING,
-#     Auxilio STRING,
-#     Month STRING
-# )
-# USING delta
-# PARTITIONED BY(Month, Auxilio)
-# LOCATION 'gs://bucket-pfc-data-lakehouse/gold/auxilio/'
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS gold_auxilios (
+# MAGIC     Id BIGINT,
+# MAGIC     IdOrgao STRING,
+# MAGIC     Orgao STRING,
+# MAGIC     UnidadeOrganizacional STRING,
+# MAGIC     MunicipioUnidadeOrganizacional STRING,
+# MAGIC     UfUnidadeOrganizacional STRING,
+# MAGIC     Matricula STRING,
+# MAGIC     Nome STRING,
+# MAGIC     Carreira STRING,
+# MAGIC     Cargo STRING,
+# MAGIC     Rubrica STRING,
+# MAGIC     NomeRubrica STRING,
+# MAGIC     RendDesc STRING,
+# MAGIC     ValorAuxilio FLOAT,
+# MAGIC     GrupoCargoOrigem STRING,
+# MAGIC     CargoOrigem STRING,
+# MAGIC     SituacaoServidor STRING,
+# MAGIC     SiglaCargo STRING,
+# MAGIC     OcorrenciaIngspf STRING,
+# MAGIC     Auxilio STRING,
+# MAGIC     Month STRING
+# MAGIC )
+# MAGIC USING delta
+# MAGIC PARTITIONED BY(Month, Auxilio)
+# MAGIC LOCATION 'gs://bucket-pfc-data-lakehouse/gold/auxilio/'
 
 # COMMAND ----------
 
-# %sql
-# CREATE TABLE IF NOT EXISTS data_lakehouse.default.silver_servidores (
-#     Id BIGINT,
-#     Nome STRING,
-#     Cpf STRING,
-#     CodCarreira STRING,
-#     DescricaoCargo STRING,
-#     UfUpagVinculacao STRING,
-#     OrgaoAtuacao STRING,
-#     MesReferencia STRING,
-#     Salario FLOAT,
-#     Month STRING
-# )
-# USING delta
-# PARTITIONED BY(Month)
-# LOCATION 'gs://bucket-pfc-data-lakehouse/silver/servidores/'
-
-# COMMAND ----------
-
-# %sql
-# CREATE TABLE IF NOT EXISTS data_lakehouse.default.silver_corrida (
-#     Id BIGINT,
-#     BaseOrigem STRING,
-#     IdCorrida STRING,
-#     Orgao STRING,
-#     OrgaoCodSiorg STRING,
-#     OrgaoCategoria STRING,
-#     UnidadeAdministrativa STRING,
-#     UnidadeAdministrativaCodSiorg STRING,
-#     Status STRING,
-#     Motivo STRING,
-#     Justificativa STRING,
-#     KmTotal FLOAT,
-#     KmRotaCalculada FLOAT,
-#     ValorCorrida FLOAT,
-#     DataAbertura STRING,
-#     DataDespacho STRING,
-#     DataLocalEmbarque STRING,
-#     DataInicio STRING,
-#     DataFinal STRING,
-#     DataCancelamento STRING,
-#     OrigemEndereco STRING,
-#     OrigemBairro STRING,
-#     OrigemCidade STRING,
-#     OrigemUF STRING,
-#     DestinoSolicitadoEndereco STRING,
-#     DestinoEfetivoEndereco STRING,
-#     OrigemLatitude FLOAT,
-#     OrigemLongitude FLOAT,
-#     DestinoSolicitadoLatitude FLOAT,
-#     DestinoSolicitadoLongitude FLOAT,
-#     DestinoEfetivoLatitude FLOAT,
-#     DestinoEfetivoLongitude FLOAT,
-#     AvaliacaoUsuarioNota STRING,
-#     AvaliacaoUsuarioTexto STRING,
-#     VeiculoFabricante STRING,
-#     VeiculoModelo STRING,
-#     VeiculoAnoFabricacao STRING,
-#     VeiculoAnoModelo STRING,
-#     VeiculoCor STRING,
-#     VeiculoPlaca STRING,
-#     AtesteSetorialData STRING,
-#     ContesteInfo STRING,
-#     Year STRING
-# )
-# USING delta
-# PARTITIONED BY(Year)
-# LOCATION 'gs://bucket-pfc-data-lakehouse/silver/corridas/'
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS data_lakehouse.default.silver_servidores (
+# MAGIC     Id BIGINT,
+# MAGIC     Nome STRING,
+# MAGIC     Cpf STRING,
+# MAGIC     CodCarreira STRING,
+# MAGIC     DescricaoCargo STRING,
+# MAGIC     UfUpagVinculacao STRING,
+# MAGIC     OrgaoAtuacao STRING,
+# MAGIC     MesReferencia STRING,
+# MAGIC     Salario FLOAT,
+# MAGIC     Month STRING
+# MAGIC )
+# MAGIC USING delta
+# MAGIC PARTITIONED BY(Month)
+# MAGIC LOCATION 'gs://bucket-pfc-data-lakehouse/silver/servidores/'
 
 # COMMAND ----------
 
